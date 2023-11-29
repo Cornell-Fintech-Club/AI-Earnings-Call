@@ -17,14 +17,14 @@ def transcribe_audio(audio_file):
                 text = r.recognize_google(audio_data)
                 return text
             except sr.UnknownValueError:
-                return "Speech Recognition could not understand the audio."
+                return "AIEC could not understand the audio."
             except sr.RequestError as e:
                 return f"Could not request results from Google Speech Recognition service; {e}"
 
 
 
 def main():
-    st.title("Audio Transcription App")
+    st.title("CFT AI Earnings Call Summarizer")
 
     uploaded_file = st.file_uploader("Upload an MP3 file", type=["mp3"])
 
@@ -37,4 +37,5 @@ def main():
             st.write(transcribed_text)
 
 if __name__ == "__main__":
+    st.sidebar.image("CFT_logo.jpeg", width=100)
     main()
