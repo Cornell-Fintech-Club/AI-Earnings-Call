@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time Speech-to-Text</title>
+</head>
+
+<body>
+    <header>
+        <h1>Real Time Speech-to-Text</h1>
+        <p>This demo app is using Google Speech Recognition for MP3 files.</p>
+    </header>
+
+    <section>
+        <!-- File input for uploading MP3 files -->
+        <input type="file" id="fileInput" accept=".mp3">
+
+        <!-- Button to initiate transcription -->
+        <button onclick="transcribeAudio()">Transcribe Audio</button>
+    </section>
+
+    <section>
+        <!-- Main functionality of the app (speech-to-text) -->
+        <div id="loadingMessage">
+            <p>Loading...</p>
+        </div>
+
+        <div id="textOutput">
+            <p>Text Output:</p>
+            <p><strong>Text:</strong> <span id="transcriptionResult"></span></p>
+        </div>
+
+        <!-- Additional elements or content for the main functionality -->
+    </section>
+
+    <script>
+        // Function to handle transcription
+        async function transcribeAudio() {
+            const fileInput = document.getElementById('fileInput');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const textOutput = document.getElementById('textOutput');
+            const transcriptionResult = document.getElementById('transcriptionResult');
+
+            // Fetch the selected file
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an MP3 file.');
+                return;
+            }
+
+            loadingMessage.innerHTML = 'Transcribing...';
+
+            // Create an AudioContext with a dummy audio input
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioSource = audioContext.createBufferSource();
+            audioSource.buffer = await readFileAsArrayBuffer(file);
+            audioSource.connect(audioContext.destination);
+
+            // Create a SpeechRecognition object
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+
+            // Event listener for recognition result
+            recognition.onresult = function (event) {
+                const result = event.results[0][0].transcript;
+                transcriptionResult.textContent = result;
+                loadingMessage.innerHTML = 'Transcription complete.';
+                // Clean up
+                audioSource.stop();
+                audioContext.close();
+            };
+
+            // Event listener for recognition error
+            recognition.onerror = function (event) {
+                loadingMessage.innerHTML = 'Error during transcription.';
+                // Clean up
+                audioSource.stop();
+                audioContext.close();
+            };
+
+            // Start the speech recognition process
+            recognition.start();
+        }
+
+        // Function to read a file as an array buffer
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    resolve(event.target.result);
+                };
+                reader.onerror = function (event) {
+                    reject(event.target.error);
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+    </script>
+</body>
+
+</html>
