@@ -22,4 +22,4 @@ def transcribe_audio(audio_file):
                 return f"Could not request results from Google Speech Recognition service; {e}"
 
 if __name__ == "__main__":
-    print(transcribe_audio("Backend/test/Tesla_Demo.mp3"))
+    print(transcribe_audio("backend/test/Tesla_Demo.mp3"))
