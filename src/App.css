@@ -34,6 +34,20 @@ body {
   background-color: rgb(200, 173, 173); /* Dark gray background for the main container */
 }
 
+.welcome-page{
+  height: 100vh;
+  background-color: rgb(200, 173, 173);
+}
+
+.welcome-page-title{
+  padding: 20px;
+  color: rgb(139, 0, 0); /* Slightly less bold red */
+}
+
+.button-group {
+  margin-top: 10px;
+}
+
 .transcription-container,
 .portfolio-container {
   flex: 1;
