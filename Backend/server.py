@@ -12,8 +12,8 @@ from pydub import AudioSegment
 app = Flask(__name__)
 CORS(app, resources={r"/transcribe": {"origins": "*"}})
 app.config['MONGO_URI'] = "mongodb+srv://junc040105:ai_earnings@cft.3j0i9mo.mongodb.net/transcriptions?retryWrites=true&w=majority&appName=CFT"
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Change this to a secure random string
+app.config['SECRET_KEY'] = 'CFT'
+app.config['JWT_SECRET_KEY'] = 'CFT'
 bcrypt = Bcrypt(app)
 mongo = PyMongo(app)
 login_manager = LoginManager(app)
@@ -38,7 +38,6 @@ def login():
             user_obj = User(str(user_data['_id']))
             login_user(user_obj)
 
-            # Generate an access token
             access_token = create_access_token(identity=str(user_data['_id']))
             
             return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
@@ -66,7 +65,6 @@ def register():
             user_obj = User(user_id)
             login_user(user_obj)
 
-            # Generate an access token
             access_token = create_access_token(identity=user_id)
 
             return jsonify({'message': 'Registration successful', 'access_token': access_token}), 201
