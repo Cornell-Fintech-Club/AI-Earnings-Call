@@ -41,13 +41,63 @@ body {
 
 .welcome-page-title{
   padding: 20px;
-  color: rgb(139, 0, 0); /* Slightly less bold red */
+  color: rgb(139, 0, 0); 
 }
-
 .button-group {
-  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 10px;
 }
 
+.button-group input[type="email"],
+.button-group input[type="password"] {
+  width: 36%;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  padding-left: 20px;
+  background-color: rgb(250, 252, 251);
+}
+
+.button-group button {
+  height: 42px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background-color: rgb(250, 252, 251);
+}
+
+.forgot-password {
+  color: rgb(139, 0, 0);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.login-button {
+  width: 30%;
+  height: 35px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  padding-left: 10px;
+  padding-right: 20px;
+  background-color: rgb(200, 173, 173);
+  cursor: pointer;
+}
+.sign-up-link {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: black;
+}
+
+.sign-up {
+  color: rgb(139, 0, 0);
+  text-decoration: underline;
+}
 .transcription-container,
 .portfolio-container {
   flex: 1;
