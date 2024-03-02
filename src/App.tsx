@@ -15,7 +15,6 @@ const App: React.FC = () => {
   const handleTranscribe = async () => {
     try {
       if (file) {
-        console.log("REACHED")
         const formData = new FormData();
         formData.append('audio', file);
   
@@ -38,7 +37,6 @@ const App: React.FC = () => {
       setTranscription('Error transcribing audio.');
     }
   };
-  
 
   return (
     <div>
@@ -51,7 +49,23 @@ const App: React.FC = () => {
           <h1>Audio Transcription</h1>
           <input type="file" accept=".mp3, audio/*" onChange={handleFileChange} />
           <button onClick={handleTranscribe}>Transcribe</button>
-          {transcription && <div>Transcription: {transcription}</div>}
+          
+            <div
+              style={{
+                width: "520px",
+                height: "400px",
+                backgroundColor: "gray",
+                border: "1px solid black",
+                borderRadius: "8px",
+                boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.1)",
+                padding: "10px",
+                boxSizing: "border-box", // Ensures padding and border are included in the total width/height
+                marginTop: "20px",
+              }}
+            >
+              <p>{transcription}</p>
+            </div>
+          
         </div>
         <div className="divider"></div>
         <div className="portfolio-container">
