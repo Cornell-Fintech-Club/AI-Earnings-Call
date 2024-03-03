@@ -1,12 +1,10 @@
-/* src/App.css */
-
 body {
   margin: 0;
   padding: 0;
   font-family: 'Times New Roman', sans-serif;
-  background-color: rgb(239, 234, 232); /* Dark gray background */
-  color: rgb(139, 0, 0); /* Slightly less bold red */
-  text-align: center; /* Center-align all text */
+  background-color: rgb(239, 234, 232);
+  color: rgb(139, 0, 0);
+  text-align: center;
 }
 
 .header {
@@ -14,35 +12,36 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background-color: rgb(239, 234, 232); /* Dark gray background for the header */
+  background-color: rgb(239, 234, 232);
 }
 
 .title {
-  color: rgb(139, 0, 0); /* Slightly less bold red for the title */
+  color: rgb(139, 0, 0);
   font-size: 24px;
-  margin-left: 10px; /* Adjust margin as needed */
+  margin-left: 10px;
 }
 
 .logo {
-  width: 200; /* Adjust the width of the logo as needed */
-  height: 50px; /* Adjust the height of the logo as needed */
+  width: 200;
+  height: 50px;
 }
 
 .app-container {
   display: flex;
   height: 100vh;
-  background-color: rgb(200, 173, 173); /* Dark gray background for the main container */
+  background-color: rgb(200, 173, 173);
 }
 
-.welcome-page{
+.welcome-page {
   height: 100vh;
   background-color: rgb(200, 173, 173);
 }
 
-.welcome-page-title{
+.welcome-page-title {
   padding: 20px;
-  color: rgb(139, 0, 0); 
+  color: rgb(139, 0, 0);
 }
+
 .button-group {
   border-radius: 10px;
   border: none;
@@ -87,6 +86,7 @@ body {
   background-color: rgb(200, 173, 173);
   cursor: pointer;
 }
+
 .sign-up-link {
   text-align: center;
   margin-top: 20px;
@@ -98,31 +98,56 @@ body {
   color: rgb(139, 0, 0);
   text-decoration: underline;
 }
+
 .transcription-container,
 .portfolio-container {
   flex: 1;
   padding: 20px;
   box-sizing: border-box;
-  width: 50%; /* Adjust the width of the containers as needed */
+  width: 50%;
 }
 
 .transcription-container {
-  border-right: 2px solid rgb(139, 0, 0); /* Add a red border to the right of the transcription container */
+  border-right: 2px solid rgb(139, 0, 0);
+  flex: 2;
 }
 
 .transcription-container h1,
 .portfolio-container h1 {
-  color:rgb(139, 0, 0); /* Slightly less bold red for headings */
+  display: none;
 }
 
 .portfolio-container {
   overflow-y: auto;
+  flex: 1;
 }
 
 .company-box {
-  border: 1px solid rgb(139, 0, 0); /* Slightly less bold red border for company boxes */
+  border: 1px solid rgb(139, 0, 0);
   padding: 10px;
   margin-bottom: 10px;
-  background-color: rgb(239, 234, 232); /* Dark gray background for company boxes */
-  color: rgb(139, 0, 0); /* Slightly less bold red text */
+  background-color: rgb(239, 234, 232);
+  color: rgb(139, 0, 0);
+}
+
+.logout-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgb(239, 234, 232);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  color: rgb(139, 0, 0);
+}
+
+/* Add this to your stylesheet */
+.transcription-box {
+  margin-top: 20px;
+}
+
+.gray-box {
+  background-color: #dddddd;
+  padding: 10px;
+  margin-top: 10px;
 }

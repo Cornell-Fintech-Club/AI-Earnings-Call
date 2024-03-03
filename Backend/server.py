@@ -2,22 +2,24 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from bson import ObjectId
+import openai
 
 import io
 import speech_recognition as sr
 from pydub import AudioSegment
+import yfinance as yf
 
 app = Flask(__name__)
-CORS(app, resources={r"/transcribe": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['MONGO_URI'] = "mongodb+srv://junc040105:ai_earnings@cft.3j0i9mo.mongodb.net/transcriptions?retryWrites=true&w=majority&appName=CFT"
 app.config['SECRET_KEY'] = 'CFT'
-app.config['JWT_SECRET_KEY'] = 'CFT'
 bcrypt = Bcrypt(app)
 mongo = PyMongo(app)
 login_manager = LoginManager(app)
-jwt = JWTManager(app)
+openai.api_key = "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"
 
 class User(UserMixin):
     def __init__(self, user_id):
@@ -25,7 +27,9 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User(user_id)
+    return User.query.get(int(user_id))
+
+from flask_login import login_user
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -38,9 +42,7 @@ def login():
             user_obj = User(str(user_data['_id']))
             login_user(user_obj)
 
-            access_token = create_access_token(identity=str(user_data['_id']))
-            
-            return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
+            return jsonify({'message': 'Login successful', 'username': username}), 200
         else:
             return jsonify({'message': 'Invalid username or password'}), 401
 
@@ -48,11 +50,10 @@ def login():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/logout')
-@jwt_required()
 def logout():
     logout_user()
     return jsonify({'message': 'Logout successful'}), 200
-
+    
 @app.route('/register', methods=['POST'])
 def register():
     try:
@@ -75,21 +76,15 @@ def register():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/transcribe', methods=['POST'])
-@jwt_required()
 def transcribe_route():
     try:
-        print("Request received")
-
         audio_file = request.files['audio']
         transcription_result = transcribe_audio(audio_file)
-        print(transcription_result)
-        print(mongo)
-        print(mongo.db.list_collection_names())
-        mongo.db.transcriptions.insert_one({'transcription': transcription_result})
 
         response = jsonify({'transcription': transcription_result})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
+
     except Exception as e:
         print(f"Error: {str(e)}")
         response = jsonify({'error': str(e)})
@@ -113,6 +108,84 @@ def transcribe_audio(audio_file):
                 return "AIEC could not understand the audio."
             except sr.RequestError as e:
                 return f"Could not request results from Google Speech Recognition service; {e}"
+            
+@app.route('/company-info/<symbol>', methods=['GET'])
+def get_company_info(symbol):
+    try:
+        stock = yf.Ticker(symbol)
+        company_info = stock.info
+        history = stock.history(period='1d')
+
+        if not company_info:
+            return jsonify({'error': 'Invalid symbol or API key'}), 400
+
+        result = {
+            'symbol': company_info.get('symbol', ''),
+            'name': company_info.get('longName', ''),
+            'industry': company_info.get('industry', ''),
+            'sector': company_info.get('sector', ''),
+            'curr_price': company_info.get('regularMarketPrice', 0.0),
+            'prev_price': company_info.get('regularMarketPreviousClose', 0.0),
+            'change': company_info.get('regularMarketChange', 0.0),
+            'change_percent': company_info.get('regularMarketChangePercent', 0.0),
+            'high': history['High'].max(),
+            'low': history['Low'].min(),
+        }
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/store', methods=['POST'])
+def store_transcription():
+    try:
+        data = request.json
+        transcription = data.get('transcription')
+
+        if not transcription:
+            return jsonify({'error': 'Missing transcription or symbol'}), 400
+
+        # Store the transcription information in the database
+        result = mongo.db.transcriptions.insert_one({
+            'transcription': transcription,
+        })
+
+        if result.inserted_id:
+            return jsonify({'message': 'Transcription stored successfully'}), 200
+        else:
+            return jsonify({'error': 'Failed to store transcription'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/company-boxes', methods=['GET'])
+def get_company_boxes():
+    try:
+        company_boxes = list(mongo.db.transcriptions.find({}, {'_id': 0}))
+
+        return jsonify({'company_boxes': company_boxes}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/summarize', methods=['POST'])
+def summarize_route():
+    try:
+        data = request.json
+        transcription = data.get('transcription')
+
+        if not transcription:
+            return jsonify({'error': 'Missing transcription'}), 400
+        response = openai.Completion.create(
+            engine="davinci",
+            prompt=transcription,
+        )
+        print(response)
+        summary = response.choices[0].text.strip()
+        return jsonify({'summary': summary}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

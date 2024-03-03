@@ -1,82 +1,40 @@
 import React, { useState } from 'react';
 import './App.css';
-import logo from './logo.png';
+import Header from './components/header';
+import TranscriptionContainer from './components/transcription_box';
+import WelcomePage from './components/WelcomePage';
+import { AuthProvider, useAuth } from './components/auth_context';
+import CompanySearchBar from './components/companysearchbar';
 
 const App: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [transcription, setTranscription] = useState<string>('');
+  const [loggedIn, setLoggedIn] = useState(false);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFile(event.target.files[0]);
-    }
-  };
-
-  const handleTranscribe = async () => {
-    try {
-      if (file) {
-        const formData = new FormData();
-        formData.append('audio', file);
-  
-        const response = await fetch('http://127.0.0.1:5000/transcribe', {
-          method: 'POST',
-          body: formData,
-        });
-  
-        if (response.ok) {
-          const result = await response.json();
-          setTranscription(result.transcription);
-        } else {
-          console.error('Error transcribing audio:', response.statusText);
-        }
-      } else {
-        console.error('No file selected for transcription.');
-      }
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
-      setTranscription('Error transcribing audio.');
-    }
+  const handleLoginSuccess = () => {
+    setLoggedIn(true);
   };
 
   return (
-    <div>
-      <div className="header">
-        <img src={logo} alt="Logo" className="logo" />
-        <div className="title">AI Earnings Call</div>
-      </div>
-      <div className="app-container">
-        <div className="transcription-container">
-          <h1>Audio Transcription</h1>
-          <input type="file" accept=".mp3, audio/*" onChange={handleFileChange} />
-          <button onClick={handleTranscribe}>Transcribe</button>
-          
-            <div
-              style={{
-                width: "520px",
-                height: "400px",
-                backgroundColor: "gray",
-                border: "1px solid black",
-                borderRadius: "8px",
-                boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.1)",
-                padding: "10px",
-                boxSizing: "border-box", // Ensures padding and border are included in the total width/height
-                marginTop: "20px",
-              }}
-            >
-              <p>{transcription}</p>
-            </div>
-          
-        </div>
-        <div className="divider"></div>
-        <div className="portfolio-container">
-          <h1>Portfolio</h1>
-          <div className="company-box">Company 1</div>
-          <div className="company-box">Company 2</div>
-          <div className="company-box">Company 3</div>
-          {/* Add more company boxes as needed */}
+    <AuthProvider>
+      <div>
+        <Header />
+        {loggedIn && <CompanySearchBar />} {/* Render only if logged in */}
+        <div className="app-container d-flex justify-content-between">
+          {loggedIn ? (
+            <>
+            <TranscriptionContainer onLogout={() => setLoggedIn(false)} username="junchoi" />
+              <div className="portfolio-container">
+                <h1>Portfolio</h1>
+                <div className="company-box">Company 1</div>
+                <div className="company-box">Company 2</div>
+                <div className="company-box">Company 3</div>
+              </div>
+            </>
+          ) : (
+            <WelcomePage onLoginSuccess={handleLoginSuccess} />
+          )}
         </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 };
 
