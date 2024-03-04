@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import './transcription_box.css';
 
 interface TranscriptionContainerProps {
   onLogout: () => void;
   username: string; // Add a prop to pass the username
+  symbol: string | null;
 }
 
-const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogout, username }) => {
+const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogout, username, symbol }) => {
   const [file, setFile] = useState<File | null>(null);
   const [transcription, setTranscription] = useState<string>('');
   const [summary, setSummary] = useState<string>('');
@@ -46,7 +48,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
       setTranscription('Error transcribing audio.');
     }
   };
-
+  const apiKey = 'fake_api_key';
   const handleSummarize = async () => {
     try {
       if (transcription) {
@@ -55,9 +57,9 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer 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', 
+            'Authorization': `Bearer ${apiKey}`, 
           },
-          body: JSON.stringify({ transcription }),
+          body: JSON.stringify({ transcription , symbol}),
         });
 
         if (response.ok) {
@@ -83,7 +85,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ transcription, summary }),
+          body: JSON.stringify({ username, transcription, summary , symbol}),
         });
 
         if (response.ok) {
@@ -109,7 +111,12 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
       <h1>Audio Transcription</h1>
       <input type="file" accept=".mp3, audio/*" onChange={handleFileChange} />
       <button onClick={handleTranscribe}>Transcribe</button>
-      {transcription && <div>Transcription: {transcription}</div>}
+      {transcription && (
+        <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
+          <strong>Transcription:</strong>
+          <div>{transcription}</div>
+        </div>
+      )}
       <button onClick={handleSummarize}>Summarize</button>
       {summary && <div>Summary: {summary}</div>}
       <button onClick={handleStore} className="store-button">Store</button>
@@ -117,6 +124,10 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
       <button onClick={handleLogout} className="logout-button">Logout</button>
     </div>
   );
+  
+  
+  
+  
 };
 
 export default TranscriptionContainer;

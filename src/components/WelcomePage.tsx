@@ -40,7 +40,7 @@ const WelcomePage: React.FC<{ onLoginSuccess: () => void }> = ({ onLoginSuccess 
   };
 
   return (
-    <div className="container d-flex flex-column align-items-center justify-content-center" style={{ marginTop: '-200px', textAlign: 'center' }}>
+    <div className="container d-flex flex-column align-items-center justify-content-center" style={{ textAlign: 'center' }}>
       <h1 className="welcome-page-title">Welcome!</h1>
 
       <div className="button-group" style={{ width: '100%' }}>

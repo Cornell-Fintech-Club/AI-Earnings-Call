@@ -2,15 +2,16 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from bson import ObjectId
 import openai
-
 import io
 import speech_recognition as sr
 from pydub import AudioSegment
 import yfinance as yf
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -19,7 +20,7 @@ app.config['SECRET_KEY'] = 'CFT'
 bcrypt = Bcrypt(app)
 mongo = PyMongo(app)
 login_manager = LoginManager(app)
-openai.api_key = "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"
+openai.api_key = "fake_key"
 
 class User(UserMixin):
     def __init__(self, user_id):
@@ -28,8 +29,6 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-from flask_login import login_user
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -53,7 +52,7 @@ def login():
 def logout():
     logout_user()
     return jsonify({'message': 'Logout successful'}), 200
-    
+
 @app.route('/register', methods=['POST'])
 def register():
     try:
@@ -108,7 +107,7 @@ def transcribe_audio(audio_file):
                 return "AIEC could not understand the audio."
             except sr.RequestError as e:
                 return f"Could not request results from Google Speech Recognition service; {e}"
-            
+
 @app.route('/company-info/<symbol>', methods=['GET'])
 def get_company_info(symbol):
     try:
@@ -141,19 +140,39 @@ def store_transcription():
     try:
         data = request.json
         transcription = data.get('transcription')
+        user = data.get('username')
+        company = data.get('symbol')
 
         if not transcription:
             return jsonify({'error': 'Missing transcription or symbol'}), 400
 
-        # Store the transcription information in the database
         result = mongo.db.transcriptions.insert_one({
-            'transcription': transcription,
+            'user': user, 'company': company, 'transcription': transcription,
         })
 
         if result.inserted_id:
             return jsonify({'message': 'Transcription stored successfully'}), 200
         else:
             return jsonify({'error': 'Failed to store transcription'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/get_transcripts', methods=['GET'])
+def get_transcripts():
+    try:
+        username = request.args.get('username')
+
+        if not username:
+            return jsonify({'error': 'Missing username parameter'}), 400
+
+        # Assuming you have a 'transcriptions' collection in your MongoDB
+        transcriptions = mongo.db.transcriptions.find({'user': username}, {'_id': 0})
+
+        # Convert MongoDB cursor to a list for easier serialization
+        transcript_list = list(transcriptions)
+
+        return jsonify({'transcriptions': transcript_list}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -167,22 +186,35 @@ def get_company_boxes():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 @app.route('/summarize', methods=['POST'])
 def summarize_route():
     try:
         data = request.json
         transcription = data.get('transcription')
+        symbol = data.get('symbol')
+        print(symbol)
 
         if not transcription:
             return jsonify({'error': 'Missing transcription'}), 400
-        response = openai.Completion.create(
-            engine="davinci",
-            prompt=transcription,
+
+        # Create a conversation for Chat Completions API
+        conversation = [
+            {"role": "system", "content": "You are an AI assistant analyzing an earnings call."},
+            {"role": "user", "content": f"Summarize the following excerpt from an earnings call in the context of the company with stock ticker: {symbol}\n\n{transcription}"},
+        ]
+
+        # Call OpenAI's Chat Completions API
+        response = openai.ChatCompletion.create(
+            model="gpt-4-turbo-preview",
+            messages=conversation,
+            temperature=0.7,  # You can adjust the temperature for diversity
+            max_tokens=150  # Set an appropriate limit for the length of the response
         )
-        print(response)
-        summary = response.choices[0].text.strip()
-        return jsonify({'summary': summary}), 200
+
+        assistant_reply = response['choices'][0]['message']['content']
+        bullet_points = [point.strip() for point in assistant_reply.split('.') if point.strip()]
+        return jsonify({'summary': assistant_reply}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -5,9 +5,12 @@ import TranscriptionContainer from './components/transcription_box';
 import WelcomePage from './components/WelcomePage';
 import { AuthProvider, useAuth } from './components/auth_context';
 import CompanySearchBar from './components/companysearchbar';
+import Portfolio from './components/portfolio';
 
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
+  const [symbol, setSymbol] = useState<string | null>(null);
+  console.log(symbol)
 
   const handleLoginSuccess = () => {
     setLoggedIn(true);
@@ -17,22 +20,17 @@ const App: React.FC = () => {
     <AuthProvider>
       <div>
         <Header />
-        {loggedIn && <CompanySearchBar />} {/* Render only if logged in */}
-        <div className="app-container d-flex justify-content-between">
-          {loggedIn ? (
-            <>
-            <TranscriptionContainer onLogout={() => setLoggedIn(false)} username="junchoi" />
-              <div className="portfolio-container">
-                <h1>Portfolio</h1>
-                <div className="company-box">Company 1</div>
-                <div className="company-box">Company 2</div>
-                <div className="company-box">Company 3</div>
-              </div>
-            </>
-          ) : (
-            <WelcomePage onLoginSuccess={handleLoginSuccess} />
-          )}
-        </div>
+        {loggedIn ? (
+          <>
+            <CompanySearchBar setFinalSymbol={setSymbol} />
+            {symbol && <div className="app-container d-flex justify-content-between">
+              <TranscriptionContainer onLogout={() => setLoggedIn(false)} username="junchoi" symbol = {symbol}/>
+              <Portfolio username = "junchoi" />
+            </div>}
+          </>
+        ) : (
+          <WelcomePage onLoginSuccess={handleLoginSuccess} />
+        )}
       </div>
     </AuthProvider>
   );
