@@ -166,10 +166,8 @@ def get_transcripts():
         if not username:
             return jsonify({'error': 'Missing username parameter'}), 400
 
-        # Assuming you have a 'transcriptions' collection in your MongoDB
         transcriptions = mongo.db.transcriptions.find({'user': username}, {'_id': 0})
 
-        # Convert MongoDB cursor to a list for easier serialization
         transcript_list = list(transcriptions)
 
         return jsonify({'transcriptions': transcript_list}), 200
@@ -198,18 +196,16 @@ def summarize_route():
         if not transcription:
             return jsonify({'error': 'Missing transcription'}), 400
 
-        # Create a conversation for Chat Completions API
         conversation = [
             {"role": "system", "content": "You are an AI assistant analyzing an earnings call."},
             {"role": "user", "content": f"Summarize the following excerpt from an earnings call in the context of the company with stock ticker: {symbol}\n\n{transcription}"},
         ]
 
-        # Call OpenAI's Chat Completions API
         response = openai.ChatCompletion.create(
             model="gpt-4-turbo-preview",
             messages=conversation,
-            temperature=0.7,  # You can adjust the temperature for diversity
-            max_tokens=150  # Set an appropriate limit for the length of the response
+            temperature=0.7,
+            max_tokens=150
         )
 
         assistant_reply = response['choices'][0]['message']['content']
