@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import ReactDOM from 'react-dom/client';
+import { Link } from 'react-router-dom';
+
 
 interface PortfolioProps {
   username: string;
+}
+
+interface Transcription {
+  id: number;
+  company: string;
+  transcription: string;
 }
 
 const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
@@ -28,6 +37,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
     fetchTranscriptions();
   }, [username]);
 
+
   return (
     <div className="portfolio-container">
       <h1>Portfolio</h1>
@@ -36,7 +46,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
         <div key={index} className="company-box">
           <h3>Symbol: {transcription.company}</h3>
           <p>Transcription: {transcription.transcription}</p>
-          {/* Add any additional information you want to display */}
+          <Link to={`/portfolio_details/${transcription.id}`}>Show More</Link>
+
         </div>
       ))}
     </div>
