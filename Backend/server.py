@@ -195,6 +195,16 @@ def summarize_route():
 
         if not transcription:
             return jsonify({'error': 'Missing transcription'}), 400
+        
+        sid = SentimentIntensityAnalyzer()
+        sentiment_scores = sid.polarity_scores(transcription)
+        sentiment_summary = "The sentiment of the call is "
+        if sentiment_scores['compound'] >= 0.05:
+            sentiment_summary += "positive."
+        elif sentiment_scores['compound'] <= -0.05:
+            sentiment_summary += "negative."
+        else:
+            sentiment_summary += "neutral."
 
         conversation = [
             {"role": "system", "content": "You are an AI assistant analyzing an earnings call."},
