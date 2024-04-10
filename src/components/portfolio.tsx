@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import ReactDOM from 'react-dom/client';
-import { Link } from 'react-router-dom';
 
+interface Transcription {
+  company: string;
+  transcription: string;
+  summary: string; 
+}
 
 interface PortfolioProps {
   username: string;
@@ -15,8 +18,8 @@ interface Transcription {
 }
 
 const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
-  const [transcriptions, setTranscriptions] = useState<any[]>([]);
-  console.log(transcriptions)
+  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTranscriptions = async () => {
@@ -30,24 +33,49 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
           console.error('Error fetching transcriptions:', data.error);
         }
       } catch (error) {
-        console.error('Error fetching transcriptions:',);
+        console.error('Error fetching transcriptions:', error);
       }
     };
 
     fetchTranscriptions();
   }, [username]);
 
+  const toggleExpanded = (index: number) => {
+    setExpandedIndex(prevIndex => (prevIndex === index ? null : index));
+  };
+
+  const deleteTranscription = async (id: string | undefined, index: number) => {
+    try {
+      await axios.delete(`http://127.0.0.1:5000/delete_transcription/${id}`);
+      setTranscriptions(prevTranscriptions => {
+        const updatedTranscriptions = [...prevTranscriptions];
+        updatedTranscriptions.splice(index, 1); // Remove the deleted transcription from the array
+        return updatedTranscriptions;
+      });
+    } catch (error) {
+      console.error('Error deleting transcription:', error);
+    }
+  };
+  
 
   return (
     <div className="portfolio-container">
       <h1>Portfolio</h1>
 
       {transcriptions.map((transcription, index) => (
-        <div key={index} className="company-box">
-          <h3>Symbol: {transcription.company}</h3>
-          <p>Transcription: {transcription.transcription}</p>
-          <Link to={`/portfolio_details/${transcription.id}`}>Show More</Link>
+        <div key={index} className={`company-box ${expandedIndex === index ? 'expanded' : ''}`}>
+          <div className="company-header" onClick={() => toggleExpanded(index)}>
+            <h3>{transcription.company}</h3>
+            <button className="expand-button">{expandedIndex === index ? 'Collapse' : 'Expand'}</button>
+            <button onClick={(event) => { event.stopPropagation(); deleteTranscription(transcription.company, index); }} className="delete-button">Delete</button>
 
+          </div>
+          {expandedIndex === index && (
+            <div className="additional-info">
+              <p><strong>Transcription</strong>: {transcription.transcription}</p>
+              <p><strong>Summary</strong>: {transcription.summary}</p> {/* Display the summary */}
+            </div>
+          )}
         </div>
       ))}
     </div>

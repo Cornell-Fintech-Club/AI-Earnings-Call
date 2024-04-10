@@ -32,7 +32,6 @@ const App: React.FC = () => {
           <WelcomePage onLoginSuccess={handleLoginSuccess} />
         )}
       </div>
-      
     </AuthProvider>
   );
 };

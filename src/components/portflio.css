@@ -1,0 +1,33 @@
+.portfolio-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.company-box {
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.expanded .company-box {
+  flex-grow: 1;
+}
+
+.company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.expand-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.additional-info {
+  margin-top: 10px;
+}
