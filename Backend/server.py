@@ -11,7 +11,11 @@ import speech_recognition as sr
 from pydub import AudioSegment
 import yfinance as yf
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import nltk
+nltk.download('vader_lexicon')
+import requests
 
+BLS_API_KEY = "75e261d42bdc48f5847b6d9db074d290"
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -20,7 +24,7 @@ app.config['SECRET_KEY'] = 'CFT'
 bcrypt = Bcrypt(app)
 mongo = PyMongo(app)
 login_manager = LoginManager(app)
-openai.api_key = "fake_key"
+openai.api_key = "fake"
 
 class User(UserMixin):
     def __init__(self, user_id):
@@ -140,23 +144,28 @@ def store_transcription():
     try:
         data = request.json
         transcription = data.get('transcription')
+        summary = data.get('summary')  
+        sentiment_score = data.get('sentiment_score')  
         user = data.get('username')
         company = data.get('symbol')
 
-        if not transcription:
-            return jsonify({'error': 'Missing transcription or symbol'}), 400
+        if not transcription or not summary:  
+            return jsonify({'error': 'Missing transcription or summary'}), 400
 
         result = mongo.db.transcriptions.insert_one({
-            'user': user, 'company': company, 'transcription': transcription,
+            'user': user, 'company': company, 'transcription': transcription, 'summary': summary,
+            'sentiment_score': sentiment_score  # Store the sentiment score
         })
 
-        if result.inserted_id:
+        if result.modified_count > 0 or result.inserted_id:
             return jsonify({'message': 'Transcription stored successfully'}), 200
         else:
             return jsonify({'error': 'Failed to store transcription'}), 500
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
 
 @app.route('/get_transcripts', methods=['GET'])
 def get_transcripts():
@@ -184,6 +193,19 @@ def get_company_boxes():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+@app.route('/delete_box/<company>', methods=['DELETE'])
+def delete_company_box(company):
+    try:
+        # Find and delete the company box by company
+        result = mongo.db.transcriptions.delete_one({'company': company})
+        
+        if result.deleted_count > 0:
+            return jsonify({'message': 'Company box deleted successfully'}), 200
+        else:
+            return jsonify({'error': 'Company box not found'}), 404
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/summarize', methods=['POST'])
 def summarize_route():
@@ -191,7 +213,6 @@ def summarize_route():
         data = request.json
         transcription = data.get('transcription')
         symbol = data.get('symbol')
-        print(symbol)
 
         if not transcription:
             return jsonify({'error': 'Missing transcription'}), 400
@@ -204,16 +225,58 @@ def summarize_route():
         response = openai.ChatCompletion.create(
             model="gpt-4-turbo-preview",
             messages=conversation,
-            temperature=0.7,
+            temperature=0.7,  
             max_tokens=150
         )
 
         assistant_reply = response['choices'][0]['message']['content']
-        bullet_points = [point.strip() for point in assistant_reply.split('.') if point.strip()]
-        return jsonify({'summary': assistant_reply}), 200
+
+        sid = SentimentIntensityAnalyzer()
+        sentiment_score = sid.polarity_scores(assistant_reply)['compound']
+
+        score = int((sentiment_score + 1) * 50)
+
+        return jsonify({'summary': assistant_reply, 'score': score}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({'error': str(e)}), 500
+@app.route('/unemployment', methods=['GET'])
+def get_unemployment_data():
+    try:
+        series_id = 'LNS14000000'
+        response = requests.get(
+            f'https://api.bls.gov/publicAPI/v2/timeseries/data/{series_id}',
+            params={'registrationkey': BLS_API_KEY, 'startyear': '2022', 'endyear': '2022'}
+        )
+        if response.status_code == 200:
+            data = response.json()
+            unemployment_rate = data['Results']['series'][0]['data'][0]['value']
+            return jsonify({'unemployment_rate': unemployment_rate}), 200
+        else:
+            return jsonify({'error': 'Failed to fetch unemployment data'}), 500
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/cpi', methods=['GET'])
+def get_cpi_data():
+    try:
+        series_id = 'CUUR0000SA0'
+        response = requests.get(
+            f'https://api.bls.gov/publicAPI/v2/timeseries/data/{series_id}',
+            params={'registrationkey': BLS_API_KEY, 'startyear': '2022', 'endyear': '2022'}
+        )
+        if response.status_code == 200:
+            data = response.json()
+            cpi_value = data['Results']['series'][0]['data'][0]['value']
+            return jsonify({'cpi_value': cpi_value}), 200
+        else:
+            return jsonify({'error': 'Failed to fetch CPI data'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

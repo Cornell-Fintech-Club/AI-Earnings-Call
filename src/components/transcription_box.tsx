@@ -1,19 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import './transcription_box.css';
 
-interface TranscriptionContainerProps {
+const LoadingSpinner = () => {
+  return (
+    <div className="loading-spinner-container">
+      <div className="loading-spinner"></div>
+      <div>Loading transcription...</div>
+    </div>
+  );
+};interface TranscriptionContainerProps {
   onLogout: () => void;
-  username: string; // Add a prop to pass the username
+  username: string; 
   symbol: string | null;
 }
+
+interface Transcription {
+  company: string;
+  transcription: string;
+  summary: string;
+  sentiment_score: number;
+}
+
 
 const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogout, username, symbol }) => {
   const [file, setFile] = useState<File | null>(null);
   const [transcription, setTranscription] = useState<string>('');
   const [summary, setSummary] = useState<string>('');
+  const [sentimentScore, setSentimentScore] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false); 
+  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]); // State variable to store transcriptions
 
   useEffect(() => {
-    // Display the welcome message with the username
     console.log(`Welcome, ${username}!`);
   }, [username]);
 
@@ -25,6 +42,9 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
 
   const handleTranscribe = async () => {
     try {
+      setIsLoading(true); 
+      setTranscription(''); 
+
       if (file) {
         const formData = new FormData();
         formData.append('audio', file);
@@ -46,13 +66,15 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
     } catch (error) {
       console.error('Error transcribing audio:', error);
       setTranscription('Error transcribing audio.');
+    } finally {
+      setIsLoading(false); 
     }
   };
-  const apiKey = 'fake_api_key';
+  
+  const apiKey = 'fake';
   const handleSummarize = async () => {
     try {
       if (transcription) {
-        // Send the transcription to OpenAI for summarization
         const response = await fetch('http://127.0.0.1:5000/summarize', {
           method: 'POST',
           headers: {
@@ -65,6 +87,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
         if (response.ok) {
           const result = await response.json();
           setSummary(result.summary);
+          setSentimentScore(result.score); 
         } else {
           console.error('Error summarizing transcription:', response.statusText);
         }
@@ -78,23 +101,23 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
 
   const handleStore = async () => {
     try {
-      if (transcription) {
-        // Send the transcription to be stored
+      if (transcription && summary && sentimentScore) {
         const response = await fetch('http://127.0.0.1:5000/store', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username, transcription, summary , symbol}),
+          body: JSON.stringify({ username, transcription, summary, sentiment_score: sentimentScore, symbol }),
         });
-
+  
         if (response.ok) {
           console.log('Transcription stored successfully!');
+          handleNewTranscription({ company: symbol || '', transcription, summary, sentiment_score: sentimentScore || 0 });
         } else {
           console.error('Error storing transcription:', response.statusText);
         }
       } else {
-        console.error('No transcription available to store.');
+        console.error('Missing transcription, summary, or sentiment score.');
       }
     } catch (error) {
       console.error('Error storing transcription:', error);
@@ -102,8 +125,12 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
   };
 
   const handleLogout = () => {
-    // Perform any necessary cleanup or additional logout logic here
     onLogout();
+  };
+
+  // Add this function to handle adding new transcription to state
+  const handleNewTranscription = (newTranscription: Transcription) => {
+    setTranscriptions(prevTranscriptions => [...prevTranscriptions, newTranscription]);
   };
 
   return (
@@ -111,23 +138,34 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
       <h1>Audio Transcription</h1>
       <input type="file" accept=".mp3, audio/*" onChange={handleFileChange} />
       <button onClick={handleTranscribe}>Transcribe</button>
-      {transcription && (
+      {isLoading && <LoadingSpinner />}
+      {transcription && !isLoading && (
         <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
           <strong>Transcription:</strong>
           <div>{transcription}</div>
         </div>
       )}
+
+
       <button onClick={handleSummarize}>Summarize</button>
-      {summary && <div>Summary: {summary}</div>}
+    {summary && (
+      <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
+        <strong>Summary:</strong>
+        <div>{summary}</div>
+      </div>
+    )}
+     <div style={{ margin: '15px 0' }}></div>
+    {sentimentScore !== null && (
+      <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
+        <strong>Sentiment Score:</strong>
+        <div>{sentimentScore}</div>
+      </div>
+    )}
       <button onClick={handleStore} className="store-button">Store</button>
-      <p>Welcome, {username}!</p>
       <button onClick={handleLogout} className="logout-button">Logout</button>
     </div>
   );
-  
-  
-  
-  
 };
 
 export default TranscriptionContainer;
+
