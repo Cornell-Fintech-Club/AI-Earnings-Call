@@ -53,6 +53,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
     }
   };
 
+
+
   return (
     <div className="portfolio-container">
       <h1>Portfolio</h1>

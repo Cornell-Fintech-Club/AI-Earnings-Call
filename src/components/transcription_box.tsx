@@ -8,13 +8,19 @@ const LoadingSpinner = () => {
       <div>Loading transcription...</div>
     </div>
   );
-};
-
-interface TranscriptionContainerProps {
+};interface TranscriptionContainerProps {
   onLogout: () => void;
   username: string; 
   symbol: string | null;
 }
+
+interface Transcription {
+  company: string;
+  transcription: string;
+  summary: string;
+  sentiment_score: number;
+}
+
 
 const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogout, username, symbol }) => {
   const [file, setFile] = useState<File | null>(null);
@@ -22,6 +28,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
   const [summary, setSummary] = useState<string>('');
   const [sentimentScore, setSentimentScore] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false); 
+  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]); // State variable to store transcriptions
 
   useEffect(() => {
     console.log(`Welcome, ${username}!`);
@@ -94,17 +101,18 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
 
   const handleStore = async () => {
     try {
-      if (transcription && summary && sentimentScore) { 
+      if (transcription && summary && sentimentScore) {
         const response = await fetch('http://127.0.0.1:5000/store', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username, transcription, summary, sentiment_score: sentimentScore, symbol }), 
+          body: JSON.stringify({ username, transcription, summary, sentiment_score: sentimentScore, symbol }),
         });
   
         if (response.ok) {
           console.log('Transcription stored successfully!');
+          handleNewTranscription({ company: symbol || '', transcription, summary, sentiment_score: sentimentScore || 0 });
         } else {
           console.error('Error storing transcription:', response.statusText);
         }
@@ -115,10 +123,14 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
       console.error('Error storing transcription:', error);
     }
   };
-  
 
   const handleLogout = () => {
     onLogout();
+  };
+
+  // Add this function to handle adding new transcription to state
+  const handleNewTranscription = (newTranscription: Transcription) => {
+    setTranscriptions(prevTranscriptions => [...prevTranscriptions, newTranscription]);
   };
 
   return (

@@ -155,16 +155,17 @@ def store_transcription():
 
         result = mongo.db.transcriptions.insert_one({
             'user': user, 'company': company, 'transcription': transcription, 'summary': summary,
-            'sentiment_score': sentiment_score  
+            'sentiment_score': sentiment_score  # Store the sentiment score
         })
 
-        if result.inserted_id:
+        if result.modified_count > 0 or result.inserted_id:
             return jsonify({'message': 'Transcription stored successfully'}), 200
         else:
             return jsonify({'error': 'Failed to store transcription'}), 500
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/get_transcripts', methods=['GET'])
