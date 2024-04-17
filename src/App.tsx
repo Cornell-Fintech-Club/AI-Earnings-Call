@@ -6,14 +6,25 @@ import WelcomePage from './components/WelcomePage';
 import { AuthProvider, useAuth } from './components/auth_context';
 import CompanySearchBar from './components/companysearchbar';
 import Portfolio from './components/portfolio';
+import RegisterPage from './components/RegisterPage';
 
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [symbol, setSymbol] = useState<string | null>(null);
+  const [showRegistration, setShowRegistration] = useState(false); 
   console.log(symbol)
 
   const handleLoginSuccess = () => {
     setLoggedIn(true);
+  };
+
+  const handleSignUpClick = () => {
+    setShowRegistration(true);
+  };
+
+  const handleRegisterSuccess = () => {
+    setShowRegistration(false);
+    console.log("good")
   };
 
   return (
@@ -29,8 +40,7 @@ const App: React.FC = () => {
             </div>}
           </>
         ) : (
-          <WelcomePage onLoginSuccess={handleLoginSuccess} />
-        )}
+          showRegistration ? <RegisterPage onRegisterSuccess={handleRegisterSuccess} /> : <WelcomePage onLoginSuccess={handleLoginSuccess} onSignUpClick={handleSignUpClick} />        )}
       </div>
     </AuthProvider>
   );
