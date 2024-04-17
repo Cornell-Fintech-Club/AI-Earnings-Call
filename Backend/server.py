@@ -20,7 +20,7 @@ app.config['SECRET_KEY'] = 'CFT'
 bcrypt = Bcrypt(app)
 mongo = PyMongo(app)
 login_manager = LoginManager(app)
-openai.api_key = "fake key"
+openai.api_key = ""
 
 class User(UserMixin):
     def __init__(self, user_id):
@@ -196,10 +196,10 @@ def summarize_route():
         if not transcription:
             return jsonify({'error': 'Missing transcription'}), 400
         
-
-         # Initialize the Sentiment Intensity Analyzer
         sid = SentimentIntensityAnalyzer()
         sentiment_scores = sid.polarity_scores(transcription)
+        stock_sentiment_score = (sentiment_scores['compound'] + 1) * 50  
+
         sentiment_summary = "The sentiment of the call is "
         if sentiment_scores['compound'] >= 0.05:
             sentiment_summary += "positive."
@@ -207,7 +207,6 @@ def summarize_route():
             sentiment_summary += "negative."
         else:
             sentiment_summary += "neutral."
-
 
         conversation = [
             {"role": "system", "content": "You are an AI assistant analyzing an earnings call."},
@@ -218,12 +217,18 @@ def summarize_route():
             model="gpt-4-turbo-preview",
             messages=conversation,
             temperature=0.7,
-            max_tokens=150
+            max_tokens=150, 
+            top_p=0.9
         )
 
         assistant_reply = response['choices'][0]['message']['content']
         bullet_points = [point.strip() for point in assistant_reply.split('.') if point.strip()]
-        return jsonify({'summary': assistant_reply}), 200
+        return jsonify({
+            'summary': assistant_reply,
+            'sentiment_summary': sentiment_summary,
+            'stock_sentiment_score': stock_sentiment_score,
+            'detailed_scores': sentiment_scores
+        }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
