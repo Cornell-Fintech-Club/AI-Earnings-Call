@@ -40,20 +40,22 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
     setExpandedIndex(prevIndex => (prevIndex === index ? null : index));
   };
 
-  const deleteTranscription = async (id: string | undefined, index: number) => {
+  const handleDelete = async (company: string) => {
     try {
-      await axios.delete(`http://127.0.0.1:5000/delete_transcription/${id}`);
-      setTranscriptions(prevTranscriptions => {
-        const updatedTranscriptions = [...prevTranscriptions];
-        updatedTranscriptions.splice(index, 1); // Remove the deleted transcription from the array
-        return updatedTranscriptions;
-      });
+      const response = await axios.delete(`http://127.0.0.1:5000/delete_box/${company}`);
+      
+      if (response.status === 200) {
+        // Remove the deleted transcription from the local state
+        setTranscriptions(prevTranscriptions =>
+          prevTranscriptions.filter(transcription => transcription.company !== company)
+        );
+      } else {
+        console.error('Error deleting transcription:', response.statusText);
+      }
     } catch (error) {
       console.error('Error deleting transcription:', error);
     }
   };
-
-
 
   return (
     <div className="portfolio-container">
@@ -64,7 +66,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
           <div className="company-header" onClick={() => toggleExpanded(index)}>
             <h3>{transcription.company}</h3>
             <button className="expand-button">{expandedIndex === index ? 'Collapse' : 'Expand'}</button>
-            <button onClick={(event) => { event.stopPropagation(); deleteTranscription(transcription.company, index); }} className="delete-button">Delete</button>
+            <button onClick={() => handleDelete(transcription.company)}>Delete</button>
           </div>
           {expandedIndex === index && (
             <div className="additional-info">
