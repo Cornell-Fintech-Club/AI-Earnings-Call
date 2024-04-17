@@ -50,4 +50,4 @@ The project is structured as follows:
 - SWEs: Amelia, Salena, Danna, Andrew, Ethan, Aliou
 
 
-Thank you for using the Cornell Fintech Club Stock Sentiment Analysis Tool!
+Thank you for using the Cornell Fintech Club AI Earnings Call Summarizer Tool!
