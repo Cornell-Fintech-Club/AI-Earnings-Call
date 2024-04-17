@@ -2,19 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 interface Transcription {
+  id: number;
   company: string;
   transcription: string;
-  summary: string; 
+  summary: string;
+  sentiment_score: number; 
 }
 
 interface PortfolioProps {
   username: string;
-}
-
-interface Transcription {
-  id: number;
-  company: string;
-  transcription: string;
 }
 
 const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
@@ -56,7 +52,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
       console.error('Error deleting transcription:', error);
     }
   };
-  
 
   return (
     <div className="portfolio-container">
@@ -68,12 +63,12 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
             <h3>{transcription.company}</h3>
             <button className="expand-button">{expandedIndex === index ? 'Collapse' : 'Expand'}</button>
             <button onClick={(event) => { event.stopPropagation(); deleteTranscription(transcription.company, index); }} className="delete-button">Delete</button>
-
           </div>
           {expandedIndex === index && (
             <div className="additional-info">
               <p><strong>Transcription</strong>: {transcription.transcription}</p>
-              <p><strong>Summary</strong>: {transcription.summary}</p> {/* Display the summary */}
+              <p><strong>Summary</strong>: {transcription.summary}</p>
+              <p><strong>Sentiment Score</strong>: {transcription.sentiment_score}</p>
             </div>
           )}
         </div>

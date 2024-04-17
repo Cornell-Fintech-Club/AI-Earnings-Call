@@ -1,4 +1,3 @@
-// PortfolioDetails.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
@@ -8,6 +7,7 @@ interface Transcription {
   company: string;
   transcription: string;
   summary: string;
+  sentiment_score: number; 
 }
 
 const PortfolioDetails: React.FC = () => {
@@ -42,9 +42,9 @@ const PortfolioDetails: React.FC = () => {
       <h2>{transcription.company}</h2>
       <p><strong>Transcription:</strong> {transcription.transcription}</p>
       <p><strong>Summary:</strong> {transcription.summary}</p>
+      <p><strong>Sentiment Score:</strong> {transcription.sentiment_score}</p>
     </div>
   );
 };
-
 
 export default PortfolioDetails;
