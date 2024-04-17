@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './transcription_box.css';
 
+const LoadingSpinner = () => {
+  return (
+    <div className="loading-spinner-container">
+      <div className="loading-spinner"></div>
+      <div>Loading transcription...</div>
+    </div>
+  );
+};
+
 interface TranscriptionContainerProps {
   onLogout: () => void;
-  username: string; // Add a prop to pass the username
+  username: string; 
   symbol: string | null;
 }
 
@@ -11,9 +20,9 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
   const [file, setFile] = useState<File | null>(null);
   const [transcription, setTranscription] = useState<string>('');
   const [summary, setSummary] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false); 
 
   useEffect(() => {
-    // Display the welcome message with the username
     console.log(`Welcome, ${username}!`);
   }, [username]);
 
@@ -25,6 +34,9 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
 
   const handleTranscribe = async () => {
     try {
+      setIsLoading(true); 
+      setTranscription(''); 
+
       if (file) {
         const formData = new FormData();
         formData.append('audio', file);
@@ -46,13 +58,15 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
     } catch (error) {
       console.error('Error transcribing audio:', error);
       setTranscription('Error transcribing audio.');
+    } finally {
+      setIsLoading(false); 
     }
   };
-  const apiKey = 'fake_api_key';
+  
+  const apiKey = 'fake';
   const handleSummarize = async () => {
     try {
       if (transcription) {
-        // Send the transcription to OpenAI for summarization
         const response = await fetch('http://127.0.0.1:5000/summarize', {
           method: 'POST',
           headers: {
@@ -79,7 +93,6 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
   const handleStore = async () => {
     try {
       if (transcription) {
-        // Send the transcription to be stored
         const response = await fetch('http://127.0.0.1:5000/store', {
           method: 'POST',
           headers: {
@@ -102,7 +115,6 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
   };
 
   const handleLogout = () => {
-    // Perform any necessary cleanup or additional logout logic here
     onLogout();
   };
 
@@ -111,7 +123,8 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
       <h1>Audio Transcription</h1>
       <input type="file" accept=".mp3, audio/*" onChange={handleFileChange} />
       <button onClick={handleTranscribe}>Transcribe</button>
-      {transcription && (
+      {isLoading && <LoadingSpinner />}
+      {transcription && !isLoading && (
         <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
           <strong>Transcription:</strong>
           <div>{transcription}</div>
@@ -124,10 +137,6 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
       <button onClick={handleLogout} className="logout-button">Logout</button>
     </div>
   );
-  
-  
-  
-  
 };
 
 export default TranscriptionContainer;
