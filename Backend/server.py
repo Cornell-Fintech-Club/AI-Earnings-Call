@@ -1,3 +1,4 @@
+server.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_pymongo import PyMongo
@@ -16,7 +17,6 @@ nltk.download('vader_lexicon')
 import requests
 
 BLS_API_KEY = "75e261d42bdc48f5847b6d9db074d290"
-
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -194,6 +194,19 @@ def get_company_boxes():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+@app.route('/delete_box/<company>', methods=['DELETE'])
+def delete_company_box(company):
+    try:
+        # Find and delete the company box by company
+        result = mongo.db.transcriptions.delete_one({'company': company})
+        
+        if result.deleted_count > 0:
+            return jsonify({'message': 'Company box deleted successfully'}), 200
+        else:
+            return jsonify({'error': 'Company box not found'}), 404
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/summarize', methods=['POST'])
 def summarize_route():
@@ -264,6 +277,7 @@ def get_cpi_data():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

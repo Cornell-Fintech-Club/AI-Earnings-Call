@@ -145,14 +145,27 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
           <div>{transcription}</div>
         </div>
       )}
+
+
       <button onClick={handleSummarize}>Summarize</button>
-      {summary && <div>Summary: {summary}</div>}
-      {sentimentScore && <div>Sentiment Score: {sentimentScore}</div>}
+    {summary && (
+      <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
+        <strong>Summary:</strong>
+        <div>{summary}</div>
+      </div>
+    )}
+     <div style={{ margin: '15px 0' }}></div>
+    {sentimentScore !== null && (
+      <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
+        <strong>Sentiment Score:</strong>
+        <div>{sentimentScore}</div>
+      </div>
+    )}
       <button onClick={handleStore} className="store-button">Store</button>
-      <p>Welcome, {username}!</p>
       <button onClick={handleLogout} className="logout-button">Logout</button>
     </div>
   );
 };
 
 export default TranscriptionContainer;
+
