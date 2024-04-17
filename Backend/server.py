@@ -13,7 +13,9 @@ import yfinance as yf
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
 nltk.download('vader_lexicon')
+import requests
 
+BLS_API_KEY = "75e261d42bdc48f5847b6d9db074d290"
 
 
 app = Flask(__name__)
@@ -143,12 +145,12 @@ def store_transcription():
     try:
         data = request.json
         transcription = data.get('transcription')
-        summary = data.get('summary')  # Get the summary from the request data
-        sentiment_score = data.get('sentiment_score')  # Get the sentiment score from the request data
+        summary = data.get('summary')  
+        sentiment_score = data.get('sentiment_score')  
         user = data.get('username')
         company = data.get('symbol')
 
-        if not transcription or not summary:  # Ensure both transcription and summary exist
+        if not transcription or not summary:  
             return jsonify({'error': 'Missing transcription or summary'}), 400
 
         result = mongo.db.transcriptions.insert_one({
@@ -156,13 +158,14 @@ def store_transcription():
             'sentiment_score': sentiment_score  # Store the sentiment score
         })
 
-        if result.inserted_id:
+        if result.modified_count > 0 or result.inserted_id:
             return jsonify({'message': 'Transcription stored successfully'}), 200
         else:
             return jsonify({'error': 'Failed to store transcription'}), 500
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/get_transcripts', methods=['GET'])
@@ -198,8 +201,6 @@ def summarize_route():
         data = request.json
         transcription = data.get('transcription')
         symbol = data.get('symbol')
-        print("Transcription:", transcription)
-        print("Symbol:", symbol)
 
         if not transcription:
             return jsonify({'error': 'Missing transcription'}), 400
@@ -217,19 +218,51 @@ def summarize_route():
         )
 
         assistant_reply = response['choices'][0]['message']['content']
-        print("Assistant Reply:", assistant_reply)
 
         sid = SentimentIntensityAnalyzer()
         sentiment_score = sid.polarity_scores(assistant_reply)['compound']
-        print("Sentiment Score:", sentiment_score)
 
         score = int((sentiment_score + 1) * 50)
-        print("Mapped Score:", score)
 
         return jsonify({'summary': assistant_reply, 'score': score}), 200
 
     except Exception as e:
         print("Error:", e)
+        return jsonify({'error': str(e)}), 500
+@app.route('/unemployment', methods=['GET'])
+def get_unemployment_data():
+    try:
+        series_id = 'LNS14000000'
+        response = requests.get(
+            f'https://api.bls.gov/publicAPI/v2/timeseries/data/{series_id}',
+            params={'registrationkey': BLS_API_KEY, 'startyear': '2022', 'endyear': '2022'}
+        )
+        if response.status_code == 200:
+            data = response.json()
+            unemployment_rate = data['Results']['series'][0]['data'][0]['value']
+            return jsonify({'unemployment_rate': unemployment_rate}), 200
+        else:
+            return jsonify({'error': 'Failed to fetch unemployment data'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/cpi', methods=['GET'])
+def get_cpi_data():
+    try:
+        series_id = 'CUUR0000SA0'
+        response = requests.get(
+            f'https://api.bls.gov/publicAPI/v2/timeseries/data/{series_id}',
+            params={'registrationkey': BLS_API_KEY, 'startyear': '2022', 'endyear': '2022'}
+        )
+        if response.status_code == 200:
+            data = response.json()
+            cpi_value = data['Results']['series'][0]['data'][0]['value']
+            return jsonify({'cpi_value': cpi_value}), 200
+        else:
+            return jsonify({'error': 'Failed to fetch CPI data'}), 500
+
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
