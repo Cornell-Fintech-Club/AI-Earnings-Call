@@ -145,17 +145,17 @@ def store_transcription():
     try:
         data = request.json
         transcription = data.get('transcription')
-        summary = data.get('summary')  # Get the summary from the request data
-        sentiment_score = data.get('sentiment_score')  # Get the sentiment score from the request data
+        summary = data.get('summary')  
+        sentiment_score = data.get('sentiment_score')  
         user = data.get('username')
         company = data.get('symbol')
 
-        if not transcription or not summary:  # Ensure both transcription and summary exist
+        if not transcription or not summary:  
             return jsonify({'error': 'Missing transcription or summary'}), 400
 
         result = mongo.db.transcriptions.insert_one({
             'user': user, 'company': company, 'transcription': transcription, 'summary': summary,
-            'sentiment_score': sentiment_score  # Store the sentiment score
+            'sentiment_score': sentiment_score  
         })
 
         if result.inserted_id:
@@ -231,19 +231,13 @@ def summarize_route():
 @app.route('/unemployment', methods=['GET'])
 def get_unemployment_data():
     try:
-        # Specify the series ID for unemployment rate
         series_id = 'LNS14000000'
-
-        # Make a request to the BLS API
         response = requests.get(
             f'https://api.bls.gov/publicAPI/v2/timeseries/data/{series_id}',
             params={'registrationkey': BLS_API_KEY, 'startyear': '2022', 'endyear': '2022'}
         )
-
-        # Check if the request was successful
         if response.status_code == 200:
             data = response.json()
-            # Extract the unemployment rate value from the response
             unemployment_rate = data['Results']['series'][0]['data'][0]['value']
             return jsonify({'unemployment_rate': unemployment_rate}), 200
         else:
@@ -255,19 +249,13 @@ def get_unemployment_data():
 @app.route('/cpi', methods=['GET'])
 def get_cpi_data():
     try:
-        # Specify the series ID for CPI-U
         series_id = 'CUUR0000SA0'
-
-        # Make a request to the BLS API
         response = requests.get(
             f'https://api.bls.gov/publicAPI/v2/timeseries/data/{series_id}',
             params={'registrationkey': BLS_API_KEY, 'startyear': '2022', 'endyear': '2022'}
         )
-
-        # Check if the request was successful
         if response.status_code == 200:
             data = response.json()
-            # Extract the CPI value from the response
             cpi_value = data['Results']['series'][0]['data'][0]['value']
             return jsonify({'cpi_value': cpi_value}), 200
         else:
