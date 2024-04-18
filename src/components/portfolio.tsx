@@ -45,7 +45,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
       const response = await axios.delete(`http://127.0.0.1:5000/delete_box/${company}`);
       
       if (response.status === 200) {
-        // Remove the deleted transcription from the local state
         setTranscriptions(prevTranscriptions =>
           prevTranscriptions.filter(transcription => transcription.company !== company)
         );
@@ -65,7 +64,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
         <div key={index} className={`company-box ${expandedIndex === index ? 'expanded' : ''}`}>
           <div className="company-header" onClick={() => toggleExpanded(index)}>
             <h3>{transcription.company}</h3>
-            <button className="expand-button">{expandedIndex === index ? 'Collapse' : 'Expand'}</button>
+            <button className="expand-button">{expandedIndex === index ? 'Close' : 'View'}</button>
             <button onClick={() => handleDelete(transcription.company)}>Delete</button>
           </div>
           {expandedIndex === index && (

@@ -28,8 +28,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
   const [summary, setSummary] = useState<string>('');
   const [sentimentScore, setSentimentScore] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false); 
-  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]); // State variable to store transcriptions
-
+  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
   useEffect(() => {
     console.log(`Welcome, ${username}!`);
   }, [username]);
@@ -128,7 +127,6 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
     onLogout();
   };
 
-  // Add this function to handle adding new transcription to state
   const handleNewTranscription = (newTranscription: Transcription) => {
     setTranscriptions(prevTranscriptions => [...prevTranscriptions, newTranscription]);
   };
