@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../App.css";
-import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
+import "bootstrap/dist/css/bootstrap.min.css"; 
 import logo from "./logo.png";
 
 const WelcomePage: React.FC<{ onLoginSuccess: () => void, onSignUpClick: () => void }> = ({
@@ -29,9 +29,8 @@ const WelcomePage: React.FC<{ onLoginSuccess: () => void, onSignUpClick: () => v
       if (response.ok) {
         const data = await response.json();
         console.log("Login successful:", data.message);
-        setLoginError(null); // Reset login error on successful login
-        onLoginSuccess(); // Trigger the callback on successful login
-        // You might want to store the access token in a secure way, depending on your application requirements.
+        setLoginError(null);
+        onLoginSuccess(); 
       } else {
         const errorData = await response.json();
         console.log("Login failed:", errorData.message);
@@ -54,12 +53,10 @@ const WelcomePage: React.FC<{ onLoginSuccess: () => void, onSignUpClick: () => v
         <button className="button-group">Login with Google</button>
       </div>
 
-      {/* Login with Apple */}
       <div className="button-group" style={{ width: "100%" }}>
         <button className="button-group">Login with Apple</button>
       </div>
 
-      {/* OR separator */}
       <div
         style={{
           display: "flex",
@@ -88,7 +85,6 @@ const WelcomePage: React.FC<{ onLoginSuccess: () => void, onSignUpClick: () => v
         ></div>
       </div>
 
-      {/* Email and Password input */}
       <div className="button-group" style={{ width: "100%" }}>
         <input
           type="email"
@@ -109,31 +105,26 @@ const WelcomePage: React.FC<{ onLoginSuccess: () => void, onSignUpClick: () => v
         />
       </div>
 
-      {/* Show/Hide button for password */}
       <div className="button-group" style={{ width: "100%" }}>
         <button onClick={() => setShowPassword(!showPassword)}>
           {showPassword ? "Hide" : "Show"}
         </button>
       </div>
 
-      {/* Login button */}
       <div className="button-group">
         <button onClick={handleLogin}>Login</button>
       </div>
 
-      {/* Error message display */}
       {loginError && (
         <div className="button-group">
           <span className="error-message">{loginError}</span>
         </div>
       )}
 
-      {/* Forgot password link */}
       <div className="button-group">
         <span className="forgot-password">Forgot password?</span>
       </div>
 
-      {/* Sign-up link , add create username/createpassword*/}
       <div className="sign-up-link">
         Don't have an account?{" "}
         <span className="sign-up" onClick={onSignUpClick}>
