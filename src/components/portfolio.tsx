@@ -45,7 +45,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
       const response = await axios.delete(`http://127.0.0.1:5000/delete_box/${company}`);
       
       if (response.status === 200) {
-        // Remove the deleted transcription from the local state
         setTranscriptions(prevTranscriptions =>
           prevTranscriptions.filter(transcription => transcription.company !== company)
         );
@@ -65,8 +64,30 @@ const Portfolio: React.FC<PortfolioProps> = ({ username }) => {
         <div key={index} className={`company-box ${expandedIndex === index ? 'expanded' : ''}`}>
           <div className="company-header" onClick={() => toggleExpanded(index)}>
             <h3>{transcription.company}</h3>
-            <button className="expand-button">{expandedIndex === index ? 'Collapse' : 'Expand'}</button>
-            <button onClick={() => handleDelete(transcription.company)}>Delete</button>
+            <button 
+              className="expand-button" 
+              style={{
+                backgroundColor: 'rgb(206, 173, 173)',
+                color: '#fff',
+                border: 'none',
+                padding: '5px 10px',
+                cursor: 'pointer'
+              }}
+            >
+              {expandedIndex === index ? 'Close' : 'View'}
+            </button>
+            <button 
+              onClick={() => handleDelete(transcription.company)}
+              style={{
+                backgroundColor: 'rgb(139, 0, 0)',
+                color: '#fff',
+                border: 'none',
+                padding: '5px 10px',
+                cursor: 'pointer'
+              }}
+            >
+              Delete
+            </button>
           </div>
           {expandedIndex === index && (
             <div className="additional-info">

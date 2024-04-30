@@ -8,9 +8,11 @@ const LoadingSpinner = () => {
       <div>Loading transcription...</div>
     </div>
   );
-};interface TranscriptionContainerProps {
+};
+
+interface TranscriptionContainerProps {
   onLogout: () => void;
-  username: string; 
+  username: string;
   symbol: string | null;
 }
 
@@ -21,14 +23,14 @@ interface Transcription {
   sentiment_score: number;
 }
 
-
 const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogout, username, symbol }) => {
   const [file, setFile] = useState<File | null>(null);
   const [transcription, setTranscription] = useState<string>('');
   const [summary, setSummary] = useState<string>('');
   const [sentimentScore, setSentimentScore] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false); 
-  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]); // State variable to store transcriptions
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
+  const [fileError, setFileError] = useState<string>('');
 
   useEffect(() => {
     console.log(`Welcome, ${username}!`);
@@ -42,39 +44,41 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
 
   const handleTranscribe = async () => {
     try {
-      setIsLoading(true); 
-      setTranscription(''); 
+      setIsLoading(true);
+      setTranscription('');
+      setFileError('');
 
-      if (file) {
-        const formData = new FormData();
-        formData.append('audio', file);
+      if (!file) {
+        setFileError('No file selected for transcription.');
+        return;
+      }
 
-        const response = await fetch('http://127.0.0.1:5000/transcribe', {
-          method: 'POST',
-          body: formData,
-        });
+      const formData = new FormData();
+      formData.append('audio', file);
 
-        if (response.ok) {
-          const result = await response.json();
-          setTranscription(result.transcription);
-        } else {
-          console.error('Error transcribing audio:', response.statusText);
-        }
+      const response = await fetch('http://127.0.0.1:5000/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setTranscription(result.transcription);
       } else {
-        console.error('No file selected for transcription.');
+        console.error('Error transcribing audio:', response.statusText);
       }
     } catch (error) {
       console.error('Error transcribing audio:', error);
       setTranscription('Error transcribing audio.');
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   };
-  
+
   const apiKey = 'fake';
   const handleSummarize = async () => {
     try {
-      if (transcription) {
+      if (transcription && symbol) {
         const response = await fetch('http://127.0.0.1:5000/summarize', {
           method: 'POST',
           headers: {
@@ -92,7 +96,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
           console.error('Error summarizing transcription:', response.statusText);
         }
       } else {
-        console.error('No transcription available to summarize.');
+        console.error('No transcription available to summarize or symbol submitted.');
       }
     } catch (error) {
       console.error('Error summarizing transcription:', error);
@@ -101,7 +105,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
 
   const handleStore = async () => {
     try {
-      if (transcription && summary && sentimentScore) {
+      if (transcription && summary && sentimentScore && symbol) {
         const response = await fetch('http://127.0.0.1:5000/store', {
           method: 'POST',
           headers: {
@@ -112,12 +116,12 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
   
         if (response.ok) {
           console.log('Transcription stored successfully!');
-          handleNewTranscription({ company: symbol || '', transcription, summary, sentiment_score: sentimentScore || 0 });
+          handleNewTranscription({ company: symbol, transcription, summary, sentiment_score: sentimentScore });
         } else {
           console.error('Error storing transcription:', response.statusText);
         }
       } else {
-        console.error('Missing transcription, summary, or sentiment score.');
+        console.error('Missing transcription, summary, sentiment score, or symbol.');
       }
     } catch (error) {
       console.error('Error storing transcription:', error);
@@ -128,16 +132,28 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
     onLogout();
   };
 
-  // Add this function to handle adding new transcription to state
   const handleNewTranscription = (newTranscription: Transcription) => {
     setTranscriptions(prevTranscriptions => [...prevTranscriptions, newTranscription]);
   };
 
   return (
-    <div className="transcription-container">
+    <div className="transcription-container-2">
       <h1>Audio Transcription</h1>
       <input type="file" accept=".mp3, audio/*" onChange={handleFileChange} />
-      <button onClick={handleTranscribe}>Transcribe</button>
+      {fileError && <div className="error-message">{fileError}</div>}
+      <button 
+        onClick={handleTranscribe} 
+        disabled={!symbol} 
+        style={{
+          backgroundColor: 'rgb(206, 171, 171)',
+          color: 'black',
+          border: '2px solid darkred',
+          padding: '8px 16px',
+          cursor: 'pointer'
+        }}
+      >
+        Transcribe
+      </button>
       {isLoading && <LoadingSpinner />}
       {transcription && !isLoading && (
         <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
@@ -145,27 +161,62 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
           <div>{transcription}</div>
         </div>
       )}
-
-
-      <button onClick={handleSummarize}>Summarize</button>
-    {summary && (
-      <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
-        <strong>Summary:</strong>
-        <div>{summary}</div>
-      </div>
-    )}
-     <div style={{ margin: '15px 0' }}></div>
-    {sentimentScore !== null && (
-      <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
-        <strong>Sentiment Score:</strong>
-        <div>{sentimentScore}</div>
-      </div>
-    )}
-      <button onClick={handleStore} className="store-button">Store</button>
-      <button onClick={handleLogout} className="logout-button">Logout</button>
+  
+      <button 
+        onClick={handleSummarize} 
+        disabled={!transcription || !symbol} 
+        style={{
+          backgroundColor: 'rgb(206, 171, 171)',
+          color: 'black',
+          border: '2px solid darkred',
+          padding: '8px 16px',
+          cursor: 'pointer'
+        }}
+      >
+        Summarize
+      </button>
+      {summary && (
+        <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
+          <strong>Summary:</strong>
+          <div>{summary}</div>
+        </div>
+      )}
+      <div style={{ margin: '15px 0' }}></div>
+      {sentimentScore !== null && (
+        <div className="result-box" style={{ backgroundColor: 'rgb(206, 171, 171)', border: '2px solid darkred', padding: '10px', color: 'black' }}>
+          <strong>Sentiment Score:</strong>
+          <div>{sentimentScore}</div>
+        </div>
+      )}
+      <button 
+        onClick={handleStore} 
+        disabled={!transcription || !summary || sentimentScore === null || !symbol} 
+        className="store-button"
+        style={{
+          backgroundColor: 'rgb(206, 171, 171)',
+          color: 'black',
+          border: '2px solid darkred',
+          padding: '8px 16px',
+          cursor: 'pointer'
+        }}
+      >
+        Store
+      </button>
+      <button 
+        onClick={handleLogout} 
+        className="logout-button"
+        style={{
+          backgroundColor: 'rgb(206, 171, 171)',
+          color: 'black',
+          border: '2px solid darkred',
+          padding: '8px 16px',
+          cursor: 'pointer'
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
-};
+  };
 
 export default TranscriptionContainer;
-

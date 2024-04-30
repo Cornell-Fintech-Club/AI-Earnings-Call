@@ -11,10 +11,10 @@ const CompanySearchBar: React.FC<CompanySearchBarProps> = ({ setFinalSymbol }) =
   const [error, setError] = useState('');
   const [companyInfo, setCompanyInfo] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [blsData, setBlsData] = useState<any | null>(null);
 
   const handleSearch = async () => {
     try {
-      // Validate if symbol is empty
       if (!symbol) {
         setError('Please enter a company symbol');
         return;
@@ -32,13 +32,28 @@ const CompanySearchBar: React.FC<CompanySearchBarProps> = ({ setFinalSymbol }) =
       } else {
         setError('');
         setCompanyInfo(data);
+        fetchBlsData();
       }
     } catch (error) {
       setError('Invalid symbol or API key');
       setCompanyInfo(null);
     } finally {
       setLoading(false);
-      setFinalSymbol(symbol)
+      setFinalSymbol(symbol);
+    }
+  };
+
+  const fetchBlsData = async () => {
+    try {
+      const unemploymentResponse = await axios.get('http://127.0.0.1:5000/unemployment');
+      const unemploymentData = unemploymentResponse.data;
+
+      const cpiResponse = await axios.get('http://127.0.0.1:5000/cpi');
+      const cpiData = cpiResponse.data;
+
+      setBlsData({ unemploymentRate: unemploymentData.unemployment_rate, cpiValue: cpiData.cpi_value });
+    } catch (error) {
+      console.error('Error fetching BLS data:', error);
     }
   };
 
@@ -71,6 +86,14 @@ const CompanySearchBar: React.FC<CompanySearchBarProps> = ({ setFinalSymbol }) =
           {companyInfo.change !== 0 && <p>Daily Low: {companyInfo.low}</p>}
 
           {companyInfo.change === 0 && <p>Markets Are Closed</p>}
+        </div>
+      )}
+
+      {blsData && (
+        <div className="bls-data-box">
+          <h3>Macro Data</h3>
+          <p>Unemployment Rate: {blsData.unemploymentRate}%</p>
+          <p>CPI Value: {blsData.cpiValue}</p>
         </div>
       )}
     </div>

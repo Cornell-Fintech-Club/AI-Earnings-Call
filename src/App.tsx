@@ -6,14 +6,23 @@ import WelcomePage from './components/WelcomePage';
 import { AuthProvider, useAuth } from './components/auth_context';
 import CompanySearchBar from './components/companysearchbar';
 import Portfolio from './components/portfolio';
+import RegisterPage from './components/RegisterPage';
 
 const App: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [symbol, setSymbol] = useState<string | null>(null);
-  console.log(symbol)
+  const [showRegistration, setShowRegistration] = useState(false);
 
   const handleLoginSuccess = () => {
     setLoggedIn(true);
+  };
+
+  const handleSignUpClick = () => {
+    setShowRegistration(true);
+  };
+
+  const handleRegisterSuccess = () => {
+    setShowRegistration(false);
   };
 
   return (
@@ -23,13 +32,19 @@ const App: React.FC = () => {
         {loggedIn ? (
           <>
             <CompanySearchBar setFinalSymbol={setSymbol} />
-            {symbol && <div className="app-container d-flex justify-content-between">
-              <TranscriptionContainer onLogout={() => setLoggedIn(false)} username="junchoi" symbol = {symbol}/>
-              <Portfolio username = "junchoi" />
-            </div>}
+            <div className="app-container d-flex justify-content-between">
+              {/* Portfolio section */}
+              <div className="portfolio-container1">
+                <Portfolio username="junchoi" />
+              </div>
+              {/* Transcription section */}
+              <div className="transcription-container">
+                <TranscriptionContainer onLogout={() => setLoggedIn(false)} username="junchoi" symbol={symbol} />
+              </div>
+            </div>
           </>
         ) : (
-          <WelcomePage onLoginSuccess={handleLoginSuccess} />
+          showRegistration ? <RegisterPage onRegisterSuccess={handleRegisterSuccess} /> : <WelcomePage onLoginSuccess={handleLoginSuccess} onSignUpClick={handleSignUpClick} />
         )}
       </div>
     </AuthProvider>

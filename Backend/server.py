@@ -154,7 +154,7 @@ def store_transcription():
 
         result = mongo.db.transcriptions.insert_one({
             'user': user, 'company': company, 'transcription': transcription, 'summary': summary,
-            'sentiment_score': sentiment_score  # Store the sentiment score
+            'sentiment_score': sentiment_score
         })
 
         if result.modified_count > 0 or result.inserted_id:
@@ -196,7 +196,6 @@ def get_company_boxes():
 @app.route('/delete_box/<company>', methods=['DELETE'])
 def delete_company_box(company):
     try:
-        # Find and delete the company box by company
         result = mongo.db.transcriptions.delete_one({'company': company})
         
         if result.deleted_count > 0:
