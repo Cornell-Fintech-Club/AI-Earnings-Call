@@ -120,7 +120,7 @@ body {
 
 .portfolio-container1 {
   overflow-y: auto;
-  flex: 1;
+  flex: 1.33;
   width: 10px;
 }
 
