@@ -75,7 +75,7 @@ const TranscriptionContainer: React.FC<TranscriptionContainerProps> = ({ onLogou
     }
   };
 
-  const apiKey = 'fake';
+  const apiKey = 'fake_key';
   const handleSummarize = async () => {
     try {
       if (transcription && symbol) {

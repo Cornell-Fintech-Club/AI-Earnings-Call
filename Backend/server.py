@@ -24,7 +24,7 @@ app.config['SECRET_KEY'] = 'CFT'
 bcrypt = Bcrypt(app)
 mongo = PyMongo(app)
 login_manager = LoginManager(app)
-openai.api_key = "fake"
+openai.api_key = "fake_key"
 
 class User(UserMixin):
     def __init__(self, user_id):
